@@ -1,0 +1,30 @@
+2025-11-08T08:15:22.123456+02:00 server1 sshd[12340]: Accepted password for ana from 192.168.1.100 port 54321 ssh2
+2025-11-08T08:15:23.234567+02:00 server1 sshd[12340]: pam_unix(sshd:session): session opened for user ana by (uid=0)
+2025-11-08T09:22:15.345678+02:00 server1 sshd[12341]: Accepted publickey for ion from 10.0.0.50 port 12345 ssh2
+2025-11-08T09:22:16.456789+02:00 server1 sshd[12341]: pam_unix(sshd:session): session opened for user ion by (uid=0)
+2025-11-08T09:45:10.567890+02:00 server1 sshd[12342]: Failed password for invalid user hacker from 203.0.113.42 port 33221 ssh2
+2025-11-08T10:12:33.678901+02:00 server1 sshd[12343]: Failed password for root from 198.51.100.10 port 55443 ssh2
+2025-11-08T10:30:01.789012+02:00 server1 sshd[12340]: pam_unix(sshd:session): session closed for user ana
+2025-11-08T11:05:44.890123+02:00 server1 sshd[12344]: Accepted password for admin from 172.16.0.10 port 44556 ssh2
+2025-11-08T11:05:45.901234+02:00 server1 sshd[12344]: pam_unix(sshd:session): session opened for user admin by (uid=0)
+2025-11-08T12:15:22.012345+02:00 server1 sshd[12341]: Disconnected from user ion 10.0.0.50 port 12345
+2025-11-08T13:20:18.123456+02:00 server1 sshd[12345]: Failed password for invalid user test from 192.0.2.15 port 60123 ssh2
+2025-11-08T14:00:00.234567+02:00 server1 sshd[12344]: pam_unix(sshd:session): session closed for user admin
+2025-11-08T15:30:25.345678+02:00 server1 sshd[12346]: Accepted password for ana from 192.168.1.100 port 55443 ssh2
+2025-11-08T15:30:26.456789+02:00 server1 sshd[12346]: pam_unix(sshd:session): session opened for user ana by (uid=0)
+2025-11-08T16:45:12.567890+02:00 server1 sshd[12347]: Failed password for ana from 203.0.113.99 port 44332 ssh2
+2025-11-08T17:22:30.678901+02:00 server1 sshd[12348]: Accepted publickey for developer from 10.0.0.100 port 33445 ssh2
+2025-11-08T17:22:31.789012+02:00 server1 sshd[12348]: pam_unix(sshd:session): session opened for user developer by (uid=0)
+2025-11-08T18:10:15.890123+02:00 server1 sshd[12349]: Failed password for invalid user admin123 from 198.51.100.20 port 22334 ssh2
+2025-11-08T19:05:40.901234+02:00 server1 sshd[12346]: pam_unix(sshd:session): session closed for user ana
+2025-11-08T20:30:55.012345+02:00 server1 sshd[12350]: Accepted password for root from 10.0.0.1 port 22222 ssh2
+2025-11-08T20:30:56.123456+02:00 server1 sshd[12350]: pam_unix(sshd:session): session opened for user root by (uid=0)
+2025-11-08T20:45:10.234567+02:00 server1 sshd[12350]: pam_unix(sshd:session): session closed for user root
+2025-11-08T22:15:33.345678+02:00 server1 sshd[12351]: Accepted publickey for ion from 10.0.0.50 port 54567 ssh2
+2025-11-08T22:15:34.456789+02:00 server1 sshd[12351]: pam_unix(sshd:session): session opened for user ion by (uid=0)
+2025-11-09T01:20:22.567890+02:00 server1 sshd[12352]: Failed password for invalid user backup from 203.0.113.123 port 55667 ssh2
+2025-11-09T02:10:15.678901+02:00 server1 sshd[12348]: Disconnected from user developer 10.0.0.100 port 33445
+2025-11-09T08:00:00.789012+02:00 server1 sshd[12353]: Accepted password for ana from 192.168.1.101 port 60001 ssh2
+2025-11-09T08:00:01.890123+02:00 server1 sshd[12353]: pam_unix(sshd:session): session opened for user ana by (uid=0)
+2025-11-09T10:30:45.901234+02:00 server1 sshd[12354]: Failed password for root from 198.51.100.50 port 33221 ssh2
+2025-11-09T12:15:20.012345+02:00 server1 sshd[12351]: pam_unix(sshd:session): session closed for user ion
