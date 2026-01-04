@@ -3,7 +3,28 @@
 BOLD_BLUE="\033[1;34m"
 BOLD_RED="\033[1;31m"
 NC="\033[0m"
+SINCE=0
+UNTIL=9999999999
+PRESENT=""
 
+while getopts "s:t:p:" opt; do
+  case $opt in
+    s) 
+      SINCE=$(date -d "$OPTARG" +%s 2>/dev/null)
+      if [[ -z "$SINCE" ]]; then echo -e "${BOLD_RED}Invalid date format for -s: $SINCE${NC}"; exit 1; fi
+      ;;
+    t) 
+      UNTIL=$(date -d "$OPTARG" +%s 2>/dev/null)
+      if [[ -z "$UNTIL" ]]; then echo -e "${BOLD_RED}Invalid date format for -t: $UNTIL${NC}"; exit 1; fi
+      ;;
+    p) 
+      PRESENT=$(date -d "$OPTARG" +%s 2>/dev/null)
+      if [[ -z "$PRESENT" ]]; then echo -e "${BOLD_RED}Invalid date format for -p: $PRESENT${NC}"; exit 1; fi
+      ;;
+    *) echo "Usage: $0 [-s since_date] [-t until_date] [-p at_date]"; exit 1 ;;
+  esac
+done
+shift $((OPTIND-1))
 parse() {
     local file="$1"
     local pid timestamp ip user
@@ -118,8 +139,21 @@ process() {
             LOGOUT)
                 if [[ -n "${sessions[$pid]}" ]]; then
                     local timestamp_out user_out ip_out tty_out
+                  s_epoch=$(date -d "$t_start" +%s 2>/dev/null)
+                  e_epoch=$(date -d "$timestamp" +%s 2>/dev/null)
+
+                   show=1
+                 [[ $s_epoch -lt $SINCE ]] && show=0
+                 [[ $s_epoch -gt $UNTIL ]] && show=0
+                 if [[ -n "$PRESENT" ]]; then
+                    if (( s_epoch <= PRESENT && e_epoch >= PRESENT )); then
+                    show=1
+else
+                    show=0
+                    fi
+                 fi                   
                     IFS='|' read -r timestamp_out user_out ip_out tty_out <<< "${sessions[$pid]}"
-                    print "$user_out" "$tty_out" "$ip_out" "$timestamp_out" "$timestamp" "no"
+                   [[ $show -eq 1 ]] && print "$user_out" "$tty_out" "$ip_out" "$timestamp_out" "$timestamp" "no"
                     unset 'sessions[$pid]'
                     check=1
                 fi
@@ -138,7 +172,21 @@ process() {
     else
         echo "$active" | sort -t'|' -k1 | while IFS='|' read -r timestamp user ip tty; do
             [[ -z "$timestamp" ]] && continue
-            print "$user" "$tty" "$ip" "$timestamp" "" "yes"
+            s_epoch=$(date -d "$t_start" +%s 2>/dev/null)
+            now=$(date +%s)
+            show=1
+    
+            [[ $s_epoch -lt $SINCE ]] && show=0
+            [[ $s_epoch -gt $UNTIL ]] && show=0
+    
+            if [[ -n "$PRESENT" ]]; then
+                if (( s_epoch <= PRESENT && PRESENT <= now )); then
+                    show=1
+                else
+                    show=0
+                fi
+            fi        
+            [[ $show -eq 1 ]] && print "$user" "$tty" "$ip" "$timestamp" "" "yes"
         done
     fi
     
