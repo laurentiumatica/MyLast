@@ -16,29 +16,29 @@ contor_teste_rulate=0
 
 ruleaza_test(){
 
-	contor_teste_rulate=$((contor_teste_rulate+1))
+    contor_teste_rulate=$((contor_teste_rulate+1))
 
-	local test="$1"
-	local comanda="$2"
-	shift;shift
-	local pattern="$@"
+    local test="$1"
+    local comanda="$2"
+    shift;shift
+    local pattern="$@"
 
-	echo -e "${albastru_bold}Se executa '$test': $comanda${nc}"
-	echo -e "Pattern cautat: '$pattern'"
+    echo -e "${albastru_bold}Se executa '$test': $comanda${nc}"
+    echo -e "Pattern cautat: '$pattern'"
 
-	if eval "$comanda" 2>&1 | grep -q "$pattern"; then
-		echo -e "${verde_bold}PASS${nc}"
-		contor_teste_reusite=$((contor_teste_reusite+1))
-	else
-		echo -e "${rosu_bold}FAIL${nc}"
-		contor_teste_esuate=$((contor_teste_esuate+1))
-	fi
-	echo ""
+    if eval "$comanda" 2>&1 | grep -q "$pattern"; then
+        echo -e "${verde_bold}PASS${nc}"
+        contor_teste_reusite=$((contor_teste_reusite+1))
+    else
+        echo -e "${rosu_bold}FAIL${nc}"
+        contor_teste_esuate=$((contor_teste_esuate+1))
+    fi
+    echo ""
 }
 
 if [[ ! -f "$cale_script" ]]; then
-	echo -e "${rosu_bold}EROARE:${nc} Script-ul nu exista!"
-	exit 1
+    echo -e "${rosu_bold}EROARE:${nc} Script-ul nu exista!"
+    exit 1
 fi
 
 chmod +x "$cale_script"
@@ -56,10 +56,9 @@ echo -e "Teste esuate:  ${rosu}$contor_teste_esuate${nc}"
 echo ""
 
 if [[ "$contor_teste_reusite" == "$contor_teste_rulate" ]]; then
-	echo -e "${verde_bold}Script-ul a rulat cu succes!${nc}"
-	exit 0
+    echo -e "${verde_bold}Script-ul a rulat cu succes!${nc}"
+    exit 0
 else
-	echo -e "${rosu_bold}Scriptul necesita interventie!${nc}"
-	exit 1
+    echo -e "${rosu_bold}Scriptul necesita interventie!${nc}"
+    exit 1
 fi
-
