@@ -1,24 +1,24 @@
-# mylast & mylastb
+# mylast.sh & mylastb.sh
 
 Command-line tools for viewing authentication logs and login history.
 
 ## NAME
 
-**mylast** - show listing of last logged in users  
-**mylastb** - show listing of failed login attempts
+**mylast.sh** - show listing of last logged in users  
+**mylastb.sh** - show listing of failed login attempts
 
 ## SYNOPSIS
 
 ```bash
-mylast [-s since_date] [-t until_date] [-p at_date] [-n num_sessions] [file]
-mylastb [-s since_date] [-t until_date] [-p at_date] [-n num_sessions] [file]
+mylast.sh [-s since_date] [-t until_date] [-p at_date] [-n num_sessions] [file]
+mylastb.sh [-s since_date] [-t until_date] [-p at_date] [-n num_sessions] [file]
 ```
 
 ## DESCRIPTION
 
-`mylast` searches through the authentication log file (or the file designated by the file argument) and displays a list of all users logged in (and out) since that file was created. 
+`mylast.sh` searches through the authentication log file (or the file designated by the file argument) and displays a list of all users logged in (and out) since that file was created. 
 
-`mylastb` is the same as `mylast`, except that by default it shows a log of failed login attempts.
+`mylastb.sh` is the same as `mylast.sh`, except that by default it shows a log of failed login attempts.
 
 ## INSTALLATION
 
@@ -47,7 +47,7 @@ sudo mv mylast.sh mylastb.sh /usr/local/bin/
 
 ## OUTPUT FORMAT
 
-### mylast
+### mylast.sh
 Each line of output contains the following fields:
 - Username (8 characters)
 - Terminal (12 characters)
@@ -56,7 +56,7 @@ Each line of output contains the following fields:
 - Logout time or "still logged in"
 - Session duration in format `(HH:MM)` or `(days+HH:MM)`
 
-### mylastb
+### mylastb.sh
 Each line contains:
 - Username (8 characters)
 - Terminal (12 characters)
@@ -77,28 +77,28 @@ Each line contains:
 
 ```bash
 # Display all login sessions from default log files
-mylast
+mylast.sh
 
 # Display the 10 most recent login sessions
-mylast -n 10
+mylast.sh -n 10
 
 # Display sessions that started between 8 AM and 6 PM on January 10, 2026
-mylast -s "2026-01-10 08:00" -t "2026-01-10 18:00"
+mylast.sh -s "2026-01-10 08:00" -t "2026-01-10 18:00"
 
 # Display all sessions that were active at noon on January 10, 2026
-mylast -p "2026-01-10 12:00"
+mylast.sh -p "2026-01-10 12:00"
 
 # Display sessions from a specific log file
-mylast auth.log.sample
+mylast.sh auth.log.sample
 
 # Display sessions from a compressed archive (automatically decompressed)
-mylast auth.log.1.gz
+mylast.sh auth.log.1.gz
 
 # Display the 20 most recent failed login attempts
-mylastb -n 20
+mylastb.sh -n 20
 
 # Display failed login attempts since midnight on January 9, 2026
-mylastb -s "2026-01-09 00:00"
+mylastb.sh -s "2026-01-09 00:00"
 ```
 
 ## NOTES
