@@ -33,3 +33,9 @@
 2026-01-05T15:00:00.100000+02:00 server sshd[11001]: pam_unix(sshd:session): session opened for user henry by (uid=0)
 2026-01-05T16:00:00.000000+02:00 server sshd[12001]: Accepted password for isabel from 192.168.1.151 port 50012 ssh2
 2026-01-05T16:00:00.100000+02:00 server sshd[12001]: pam_unix(sshd:session): session opened for user isabel by (uid=0)
+2026-01-03T08:00:00.000000+02:00 server sshd[13001]: Failed password for invalid user admin from 5.6.7.8 port 50013 ssh2
+2026-01-03T09:00:00.000000+02:00 server sshd[13002]: Failed password for bob from 5.6.7.8 port 50014 ssh2
+2026-01-04T23:00:00.000000+02:00 server sshd[14001]: Failed password for invalid user test from 9.9.9.9 port 50015 ssh2
+2026-01-05T17:00:00.000000+02:00 server sshd[15001]: Accepted password for jack from 192.168.1.152 port 50016 ssh2
+2026-01-05T17:00:00.100000+02:00 server sshd[15001]: pam_unix(sshd:session): session opened for user jack by (uid=0)
+2026-01-05T18:00:00.000000+02:00 server sshd[15001]: pam_unix(sshd:session): session closed for user jack
