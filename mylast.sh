@@ -6,75 +6,52 @@ NC="\033[0m"
 SINCE=0
 UNTIL=9999999999
 PRESENT=""
+NUM=-1
+files=()
 
-while getopts "s:t:p:" opt; do
+while getopts "s:t:p:n:" opt; do
   case $opt in
-    s) 
-      SINCE=$(date -d "$OPTARG" +%s 2>/dev/null)
-      if [[ -z "$SINCE" ]]; then echo -e "${BOLD_RED}Invalid date format for -s: $SINCE${NC}"; exit 1; fi
-      ;;
-    t) 
-      UNTIL=$(date -d "$OPTARG" +%s 2>/dev/null)
-      if [[ -z "$UNTIL" ]]; then echo -e "${BOLD_RED}Invalid date format for -t: $UNTIL${NC}"; exit 1; fi
-      ;;
-    p) 
-      PRESENT=$(date -d "$OPTARG" +%s 2>/dev/null)
-      if [[ -z "$PRESENT" ]]; then echo -e "${BOLD_RED}Invalid date format for -p: $PRESENT${NC}"; exit 1; fi
-      ;;
-    *) echo "Usage: $0 [-s since_date] [-t until_date] [-p at_date]"; exit 1 ;;
+    s) SINCE=$(date -d "$OPTARG" +%s 2>/dev/null) || { echo -e "${BOLD_RED}Invalid date: $OPTARG${NC}"; exit 1; } ;;
+    t) UNTIL=$(date -d "$OPTARG" +%s 2>/dev/null) || { echo -e "${BOLD_RED}Invalid date: $OPTARG${NC}"; exit 1; } ;;
+    p) PRESENT=$(date -d "$OPTARG" +%s 2>/dev/null) || { echo -e "${BOLD_RED}Invalid date: $OPTARG${NC}"; exit 1; } ;;
+    n) NUM="$OPTARG"; [[ ! "$NUM" =~ ^[0-9]+$ || "$NUM" -eq 0 ]] && { echo -e "${BOLD_RED}Invalid number${NC}"; exit 1; } ;;
+    *) echo "Usage: $0 [-s since_date] [-t until_date] [-p at_date] [-n num_sessions] [file]"; exit 1 ;;
   esac
 done
 shift $((OPTIND-1))
+
 parse() {
-    local file="$1"
     local pid timestamp ip user
-    
     while read -r line; do
-        [[ ! "$line" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]] && continue
-        [[ ! "$line" =~ sshd\[ ]] && continue
-        
-        if [[ "$line" =~ \[([0-9]+)\] ]]; then
-            pid="${BASH_REMATCH[1]}"
-        else
-            continue
-        fi
-        
-        timestamp=$(echo "$line" | awk '{print $1}')
-        ip=$(echo "$line" | awk '{for(i=1;i<=NF;i++) if($i=="from") {print $(i+1); exit}}')
+        [[ ! "$line" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T.*sshd\[([0-9]+)\] ]] && continue
+        pid="${BASH_REMATCH[1]}"
+        timestamp=$(awk '{print $1}' <<< "$line")
         
         if [[ "$line" =~ "Accepted" ]]; then
-            user=$(echo "$line" | awk '{for(i=1;i<=NF;i++) if($i=="for") {print $(i+1); exit}}')
+            user=$(awk '{for(i=1;i<=NF;i++) if($i=="for") {print $(i+1); exit}}' <<< "$line")
+            ip=$(awk '{for(i=1;i<=NF;i++) if($i=="from") {print $(i+1); exit}}' <<< "$line")
             echo "$timestamp|$user|ACCEPTED|$ip|$pid"
         elif [[ "$line" =~ "session opened" ]]; then
-            user=$(echo "$line" | awk '{for(i=1;i<=NF;i++) if($i=="user") {print $(i+1); exit}}')
+            user=$(awk '{for(i=1;i<=NF;i++) if($i=="user") {print $(i+1); exit}}' <<< "$line")
+            ip=$(awk '{for(i=1;i<=NF;i++) if($i=="from") {print $(i+1); exit}}' <<< "$line")
             echo "$timestamp|$user|LOGIN|$ip|$pid"
         elif [[ "$line" =~ "session closed"|"Disconnected from" ]]; then
-            user=$(echo "$line" | awk '{for(i=1;i<=NF;i++) if($i=="user") {print $(i+1); exit}}')
-            echo "$timestamp|$user|LOGOUT|$ip|$pid"
+            user=$(awk '{for(i=1;i<=NF;i++) if($i=="user") {print $(i+1); exit}}' <<< "$line")
+            echo "$timestamp|$user|LOGOUT||$pid"
         fi
-    done < "$file"
+    done < "$1"
 }
 
 format() {
-    local timestamp="$1"
-    local type="$2"
-    local datetime=$(echo "$timestamp" | sed 's/\([0-9T:.-]\+\).*/\1/')
+    local datetime=$(echo "$1" | sed 's/\([0-9T:.-]\+\).*/\1/')
     local date=$(echo "$datetime" | cut -d'T' -f1)
     local time=$(echo "$datetime" | cut -d'T' -f2 | cut -d'.' -f1)
-    
-    if [[ "$type" == "full" ]]; then
-        date -d "$date $time" "+%a %b %_d %H:%M" 2>/dev/null || echo "???"
-    else
-        echo "$time" | cut -d':' -f1,2
-    fi
+    [[ "$2" == "full" ]] && { date -d "$date $time" "+%a %b %_d %H:%M" 2>/dev/null || echo "???"; } || { echo "$time" | cut -d':' -f1,2; }
 }
 
 duration() {
-    local start="$1"
-    local end="$2"
-    local sepoch=$(date -d "$start" +%s 2>/dev/null)
-    local eepoch=$(date -d "$end" +%s 2>/dev/null)
-    
+    local sepoch=$(date -d "$1" +%s 2>/dev/null)
+    local eepoch=$(date -d "$2" +%s 2>/dev/null)
     [[ -z "$sepoch" || -z "$eepoch" ]] && echo "(??:??)" && return
     
     local duration=$((eepoch - sepoch))
@@ -82,38 +59,17 @@ duration() {
     local hours=$(((duration % 86400) / 3600))
     local minutes=$(((duration % 3600) / 60))
     
-    if [[ $days -gt 0 ]]; then
-        printf "(%d+%02d:%02d)" "$days" "$hours" "$minutes"
-    else
-        printf "(%02d:%02d)" "$hours" "$minutes"
-    fi
+    [[ $days -gt 0 ]] && { printf "(%d+%02d:%02d)" "$days" "$hours" "$minutes"; } || { printf "(%02d:%02d)" "$hours" "$minutes"; }
 }
 
 print() {
-    local user="$1"
-    local tty="$2"
-    local ip="$3"
-    local start="$4"
-    local end="$5"
-    local active="$6"
-    
-    local startf=$(format "$start" "full")
-    
-    if [[ "$active" == "yes" ]]; then
-        printf "%-8.8s %-12.12s %-16.16s %-16s   still logged in\n" "$user" "$tty" "$ip" "$startf"
-    else
-        local endf=$(format "$end" "short")
-        local duration=$(duration "$start" "$end")
-        
-        printf "%-8.8s %-12.12s %-16.16s %-16s - %-5.5s  %s\n" "$user" "$tty" "$ip" "$startf" "$endf" "$duration"
-    fi
+    local startf=$(format "$4" "full")
+    [[ "$6" == "yes" ]] && { printf "%-8.8s %-12.12s %-16.16s %-16s   still logged in\n" "$1" "$2" "$3" "$startf"; } || { local endf=$(format "$5" "short"); local duration=$(duration "$4" "$5"); printf "%-8.8s %-12.12s %-16.16s %-16s - %-5.5s  %s\n" "$1" "$2" "$3" "$startf" "$endf" "$duration"; }
 }
 
 process() {
-    local file="$1"
     declare -A sessions accepted cnt
-    local timestamp user action ip pid
-    local check=0
+    local timestamp user action ip pid completed="" sepoch eepoch show active=""
     
     while IFS='|' read -r timestamp user action ip pid; do
         [[ -z "$pid" ]] && continue
@@ -123,100 +79,77 @@ process() {
                 accepted["${pid}_acc"]="$timestamp|$user|$ip"
                 ;;
             LOGIN)
-                if [[ -n "${accepted[${pid}_acc]}" ]]; then
-                    local timestamp_acc user_acc ip_acc
-                    IFS='|' read -r timestamp_acc user_acc ip_acc <<< "${accepted[${pid}_acc]}"
-                    user="$user_acc"
-                    ip="$ip_acc"
-                    timestamp="$timestamp_acc"
-                    unset 'accepted[${pid}_acc]'
-                fi
+                [[ -n "${accepted[${pid}_acc]}" ]] && { IFS='|' read -r timestamp user ip <<< "${accepted[${pid}_acc]}"; unset 'accepted[${pid}_acc]'; }
                 [[ -z "${cnt[$user]}" ]] && cnt["$user"]=0
+                
                 local tty="pts/${cnt[$user]}"
                 cnt["$user"]=$((cnt[$user] + 1))
                 sessions["$pid"]="$timestamp|$user|$ip|$tty"
                 ;;
             LOGOUT)
                 if [[ -n "${sessions[$pid]}" ]]; then
-                    local timestamp_out user_out ip_out tty_out
-                  s_epoch=$(date -d "$t_start" +%s 2>/dev/null)
-                  e_epoch=$(date -d "$timestamp" +%s 2>/dev/null)
-
-                   show=1
-                 [[ $s_epoch -lt $SINCE ]] && show=0
-                 [[ $s_epoch -gt $UNTIL ]] && show=0
-                 if [[ -n "$PRESENT" ]]; then
-                    if (( s_epoch <= PRESENT && e_epoch >= PRESENT )); then
+                    local timestamp_out
+                    IFS='|' read -r timestamp_out user ip tty <<< "${sessions[$pid]}"
+                    sepoch=$(date -d "$timestamp_out" +%s 2>/dev/null)
+                    eepoch=$(date -d "$timestamp" +%s 2>/dev/null)
                     show=1
-else
-                    show=0
-                    fi
-                 fi                   
-                    IFS='|' read -r timestamp_out user_out ip_out tty_out <<< "${sessions[$pid]}"
-                   [[ $show -eq 1 ]] && print "$user_out" "$tty_out" "$ip_out" "$timestamp_out" "$timestamp" "no"
+                    
+                    [[ $sepoch -lt $SINCE ]] && show=0
+                    [[ $sepoch -gt $UNTIL ]] && show=0
+                    [[ -n "$PRESENT" ]] && (( sepoch <= PRESENT && eepoch >= PRESENT ? (show=1) : (show=0) ))
+                    [[ $show -eq 1 ]] && { completed+="$timestamp_out|$user|$tty|$ip|$timestamp|no"$'\n'; }
+                    
                     unset 'sessions[$pid]'
-                    check=1
                 fi
                 ;;
         esac
-    done < <(parse "$file")
+    done < <(parse "$1")
     
-    local active=""
     for pid in "${!sessions[@]}"; do
         [[ "$pid" == *"_acc" ]] && continue
-        active+="${sessions[$pid]}"$'\n'
+        IFS='|' read -r timestamp user ip tty <<< "${sessions[$pid]}"
+        sepoch=$(date -d "$timestamp" +%s 2>/dev/null)
+        show=1
+
+        [[ $sepoch -lt $SINCE ]] && show=0
+        [[ $sepoch -gt $UNTIL ]] && show=0
+        [[ -n "$PRESENT" ]] && (( sepoch <= PRESENT && PRESENT <= $(date +%s) ? (show=1) : (show=0) ))
+        [[ $show -eq 1 ]] && { active+="$timestamp|$user|$tty|$ip||yes"$'\n'; }
     done
     
-    if [[ -z "$active" && "$check" -eq 0 ]]; then
+    local all_sessions="${completed}${active}"
+    
+    if [[ -z "$all_sessions" ]]; then
         echo "Nothing to be printed..."
     else
-        echo "$active" | sort -t'|' -k1 | while IFS='|' read -r timestamp user ip tty; do
+        local limit="cat"
+        [[ $NUM -ne -1 ]] && limit="head -n $NUM"
+        
+        echo "$all_sessions" | sort -t'|' -k1 -r | $limit | while IFS='|' read -r timestamp user tty ip end_time is_active; do
             [[ -z "$timestamp" ]] && continue
-            s_epoch=$(date -d "$t_start" +%s 2>/dev/null)
-            now=$(date +%s)
-            show=1
-    
-            [[ $s_epoch -lt $SINCE ]] && show=0
-            [[ $s_epoch -gt $UNTIL ]] && show=0
-    
-            if [[ -n "$PRESENT" ]]; then
-                if (( s_epoch <= PRESENT && PRESENT <= now )); then
-                    show=1
-                else
-                    show=0
-                fi
-            fi        
-            [[ $show -eq 1 ]] && print "$user" "$tty" "$ip" "$timestamp" "" "yes"
+            [[ "$is_active" == "yes" ]] && { print "$user" "$tty" "$ip" "$timestamp" "" "yes"; } || { print "$user" "$tty" "$ip" "$timestamp" "$end_time" "no"; }
         done
     fi
     
     echo ""
-    local timestamp1=$(head -1 "$file" | awk '{print $1}')
-    if [[ -n "$timestamp1" ]]; then
-        echo "wtmp begins $(format "$timestamp1" "full")"
-    fi
+    timestamp=$(head -1 "$1" | awk '{print $1}')
+    [[ -n "$timestamp" ]] && { echo "wtmp begins $(format "$timestamp" "full")"; }
     echo ""
 }
 
-files=()
-
-for pattern in "/var/log/auth.log" "/var/log/auth.log."{1,2,3,4}{,.gz}; do
-    if [[ -f "$pattern" ]]; then
-        files+=("$pattern")
-    fi
-done
-
-if [[ ${#files[@]} -eq 0 ]]; then
-    echo -e "${BOLD_RED}No auth.log files found in /var/log/${NC}"
-    exit 1
+if [[ $# -gt 0 ]]; then
+    for arg in "$@"; do
+        [[ -f "$arg" ]] && { files+=("$arg"); } || { echo -e "${BOLD_RED}File '$arg' not found${NC}"; exit 1; }
+    done
+else
+    for pattern in "/var/log/auth.log" "/var/log/auth.log."{1,2,3,4}{,.gz}; do
+        [[ -f "$pattern" ]] && { files+=("$pattern"); }
+    done
+    
+    [[ ${#files[@]} -eq 0 ]] && { echo -e "${BOLD_RED}No auth.log files found in /var/log/${NC}"; exit 1; }
 fi
 
 for file in "${files[@]}"; do
-    if [[ ! -f "$file" ]]; then
-        echo -e "${BOLD_RED}File '$file' not found${NC}"
-        exit 1
-    fi
-    
     if [[ "$file" == *.gz ]]; then
         temp=$(mktemp)
         if ! gunzip -c "$file" > "$temp" 2>/dev/null; then
