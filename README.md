@@ -25,14 +25,14 @@ mylastb [-s since_date] [-t until_date] [-p at_date] [-n num_sessions] [file]
 After downloading the scripts, you need to make them executable:
 
 ```bash
-chmod +x mylast
-chmod +x mylastb
+chmod +x mylast.sh
+chmod +x mylastb.sh
 ```
 
 Optionally, move them to a directory in your PATH:
 
 ```bash
-sudo mv mylast mylastb /usr/local/bin/
+sudo mv mylast.sh mylastb.sh /usr/local/bin/
 ```
 
 ## OPTIONS
