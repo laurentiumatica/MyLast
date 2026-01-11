@@ -103,6 +103,7 @@ mylastb.sh -s "2026-01-09 00:00"
 
 ## NOTES
 
+- The scripts require `sudo` to read authentication log files or granted read permission
 - Compressed `.gz` files are automatically decompressed transparently
 - Sessions without a logout event are marked as "still logged in"
 - Multiple concurrent sessions from the same user are distinguished by unique TTY identifiers (`pts/0`, `pts/1`, etc.)
